@@ -1,7 +1,10 @@
 // repository/bird_repository.go
 package repository
 
-import "database/sql"
+import (
+	"database/sql"
+	"log"
+)
 
 type BirdRepository struct {
 	DB *sql.DB
@@ -14,9 +17,9 @@ func NewBirdRepository(db *sql.DB) *BirdRepository {
 func (r *BirdRepository) Create(bird *Bird) error {
 	_, err := r.DB.Exec("INSERT INTO birds (name, color) VALUES (?, ?)", bird.Name, bird.Color)
 	if err != nil {
-		return err
+		log.Println("Error creating bird:", err)
 	}
-	return nil
+	return err
 }
 
 func (r *BirdRepository) GetByID(id int) (*Bird, error) {
