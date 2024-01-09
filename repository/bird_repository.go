@@ -14,14 +14,6 @@ func NewBirdRepository(db *sql.DB) *BirdRepository {
 	return &BirdRepository{DB: db}
 }
 
-//func (r *BirdRepository) Create(bird *Bird) error {
-//	_, err := r.DB.Exec("INSERT INTO birds (name, color) VALUES (?, ?)", bird.Name, bird.Color)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
-
 func (r *BirdRepository) Create(bird *Bird) error {
 	_, err := r.DB.Exec("INSERT INTO birds (name, color) VALUES (?, ?)", bird.Name, bird.Color)
 	if err != nil {

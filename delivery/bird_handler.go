@@ -3,8 +3,12 @@ package delivery
 
 import (
 	"encoding/json"
+	"github.com/arkadiusreymond/CleanGoApp/repository"
 	"github.com/arkadiusreymond/CleanGoApp/usecase"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type BirdHandler struct {
@@ -39,13 +43,19 @@ func (h *BirdHandler) CreateBirdHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *BirdHandler) GetBirdByIDHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract bird ID from URL path parameter
-	// For example: /birds/1
-	// ID is 1 in this case
-	// Handle this using a router library like gorilla/mux or chi
-	// For simplicity, I'm using a basic example here
+	// Extract bird ID from URL path parameter using gorilla/mux
+	params := mux.Vars(r)
+	idStr, ok := params["id"]
+	if !ok {
+		http.Error(w, "Invalid request. Missing bird ID.", http.StatusBadRequest)
+		return
+	}
 
-	id := 1 // Replace this with the actual ID extraction logic
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid bird ID. Must be an integer.", http.StatusBadRequest)
+		return
+	}
 
 	bird, err := h.BirdUseCase.GetBirdByID(id)
 	if err != nil {
@@ -62,14 +72,63 @@ func (h *BirdHandler) GetBirdByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *BirdHandler) UpdateBirdHandler(w http.ResponseWriter, r *http.Request) {
-	// Implement the logic to update a bird via HTTP
-	// Similar to CreateBirdHandler, extract data from the request and call BirdUseCase.UpdateBird
+	// Extract bird ID from URL path parameter using gorilla/mux
+	params := mux.Vars(r)
+	idStr, ok := params["id"]
+	if !ok {
+		http.Error(w, "Invalid request. Missing bird ID.", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid bird ID. Must be an integer.", http.StatusBadRequest)
+		return
+	}
+
+	// Parse request body for updated bird data
+	var updatedBird repository.Bird
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&updatedBird); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Set the ID of the bird to be updated
+	updatedBird.ID = id
+
+	// Call BirdUseCase.UpdateBird with the updated bird data
+	if err := h.BirdUseCase.UpdateBird(&updatedBird); err != nil {
+		http.Error(w, "Failed to update bird", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *BirdHandler) DeleteBirdHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract bird ID from URL path parameter
-	// Implement the logic to delete a bird by ID via HTTP
-	// Similar to GetBirdByIDHandler, extract ID and call BirdUseCase.DeleteBird
+	params := mux.Vars(r)
+	idStr, ok := params["id"]
+	if !ok {
+		http.Error(w, "Invalid request. Missing bird ID.", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid bird ID. Must be an integer.", http.StatusBadRequest)
+		return
+	}
+
+	// Call BirdUseCase.DeleteBird with the ID of the bird to be deleted
+	if err := h.BirdUseCase.DeleteBird(id); err != nil {
+		http.Error(w, "Failed to delete bird", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *BirdHandler) GetAllBirdsHandler(w http.ResponseWriter, r *http.Request) {
